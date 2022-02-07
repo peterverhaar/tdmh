@@ -1,2 +1,1 @@
-from .general_methods import *
-import .text
+from .general import *
