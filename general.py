@@ -22,8 +22,12 @@ def flesch_kincaid( asl , asw ):
     fk = fk - 15.59
     return fk
 
-def sortedByValue( dict ):
-    return sorted( dict , key=lambda x: dict[x])
+
+def sortedByValue( dict , ascending = True ):
+    if ascending:
+        return {k: v for k, v in sorted(dict.items(), key=lambda item: item[1])}
+    else:
+        return {k: v for k, v in reversed( sorted(dict.items(), key=lambda item: item[1]))}
 
 
 def divideIntoSegments( full_text , nr_segments ):
@@ -119,3 +123,82 @@ def remove_pg_boilerplate(complete_file):
     if re.search( r'^Produced by' , full_text , re.IGNORECASE ):
         full_text = full_text[ full_text.index('\n') : len(full_text) ]
     return full_text
+
+
+
+def concordance_word( text, regex , width = 10 ):
+
+    concordance = []
+    distance = math.floor( width /2 )
+
+    segment_length = 0
+
+    words = word_tokenize( text )
+    words = tdmh.remove_punctuation( words )
+    i = 0
+    for w in words:
+        if re.search( regex , w , re.IGNORECASE ):
+            match = ''
+            for x in range( i - distance , ( i + distance ) + 1 ):
+                if x >= 0 and x < len(words):
+                    if len(words[x]) >= 0:
+                        match += words[x] + ' '
+            concordance.append( match )
+
+        i += 1
+
+    return concordance
+
+
+def collocation( text , regex , width ):
+
+    freq_c = dict()
+    distance = math.floor(width/2)
+
+    sentences = sent_tokenize( text )
+
+    for sentence in sentences:
+
+        words = word_tokenize( sentence )
+        words = tdmh.remove_punctuation(words)
+
+        for i,w in enumerate(words):
+            if re.search( regex , w , re.IGNORECASE ):
+                index_regex = i
+
+                for x in range( i - distance , i + distance ):
+                    if x >= 0 and x < len(words) and x != index_regex:
+                        if len(words[x]) > 0:
+                            word = words[x].lower()
+                            freq_c[ word ] = freq_c.get( word , 0 ) + 1
+
+    return freq_c
+
+def cooccurrence( text , word1 , word2 , width ):
+
+    relevant_sentences = []
+
+    text = re.sub( '\s+' , ' ' , text )
+    sentences = sent_tokenize( text )
+
+    for s in sentences:
+        if re.search( r'\b' + word1 + r'\b' , s , re.IGNORECASE ) and re.search( r'\b' + word2 + r'\b' , s , re.IGNORECASE ):
+
+            words = word_tokenize(s)
+            word1_indexes = []
+            word2_indexes = []
+
+            for i,w in enumerate(words):
+                if re.search( r'\b' + word1 + r'\b' , w , re.IGNORECASE ):
+                    word1_indexes.append(i)
+                elif re.search( r'\b' + word2 + r'\b' , w , re.IGNORECASE ):
+                    word2_indexes.append(i)
+
+            if word1_indexes[0] > word2_indexes[0]:
+                difference = word1_indexes[0] - word2_indexes[0]
+            else:
+                difference = word2_indexes[0] - word1_indexes[0]
+
+            if difference <= width:
+                relevant_sentences.append(s)
+    return relevant_sentences
