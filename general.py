@@ -3,6 +3,7 @@ import re
 import os
 import nltk
 import math
+from nltk import word_tokenize
 
 def word_tokenise( text ):
     tokens = []
