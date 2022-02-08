@@ -136,7 +136,7 @@ def concordance_word( text, regex , width = 10 ):
     segment_length = 0
 
     words = word_tokenize( text )
-    words = tdmh.remove_punctuation( words )
+    words = remove_punctuation( words )
     i = 0
     for w in words:
         if re.search( regex , w , re.IGNORECASE ):
@@ -162,7 +162,7 @@ def collocation( text , regex , width ):
     for sentence in sentences:
 
         words = word_tokenize( sentence )
-        words = tdmh.remove_punctuation(words)
+        words = remove_punctuation(words)
 
         for i,w in enumerate(words):
             if re.search( regex , w , re.IGNORECASE ):
