@@ -3,9 +3,14 @@ import re
 import os
 import nltk
 import math
-from nltk import word_tokenize , sent_tokenize
+from nltk import word_tokenize , sent_tokenize, pos_tag
+from nltk.stem import WordNetLemmatizer
+import string
 
-def word_tokenise( text ):
+from nltk.corpus import stopwords
+stopwords = stopwords.words('english')
+
+def tokenise( text ):
     tokens = []
     text = text.lower()
     text = re.sub( r'--' , ' -- ' , text)
@@ -57,7 +62,7 @@ def divideIntoSegments( full_text , nr_segments ):
     return segments
 
 
-def removeExtension(text):
+def remove_extension(text):
     new_text = re.sub( '\.txt' , '' , text )
     return new_text
 
@@ -100,7 +105,7 @@ def ptb_to_wordnet(PTT):
 def remove_punctuation(words):
     new_list= []
     for w in words:
-        if w.isalpha():
+        if w.isalnum():
             new_list.append( w )
     return new_list
 
@@ -176,6 +181,11 @@ def collocation( text , regex , width ):
 
     return freq_c
 
+
+def remove_extension(text):
+    new_text = re.sub( '\.txt' , '' , text )
+    return new_text
+
 def cooccurrence( text , word1 , word2 , width ):
 
     relevant_sentences = []
@@ -204,3 +214,39 @@ def cooccurrence( text , word1 , word2 , width ):
             if difference <= width:
                 relevant_sentences.append(s)
     return relevant_sentences
+
+lemmatiser = WordNetLemmatizer()
+def lemmatise(full_text):
+    sentences = sent_tokenize(full_text)
+    lemmatised_text = ''
+
+    for sent in sentences:
+        words = word_tokenize(sent)
+        words = remove_punctuation(words)
+        pos = nltk.pos_tag(words)
+        lemmatised_sent = ''
+
+        for i,word in enumerate(words):
+            word = word.lower()
+            posTag = ptb_to_wordnet( pos[i][1] )
+
+            if re.search( r'\w+' , posTag , re.IGNORECASE ):
+                lemma = lemmatiser.lemmatize( words[i] , posTag )
+                lemmatised_sent += lemma + ' '
+            else:
+                lemmatised_sent += word + ' '
+        lemmatised_text += lemmatised_sent
+
+    return lemmatised_text
+
+
+
+def tokenise_remove_stopwords(full_text):
+    words = word_tokenize(full_text)
+    new_list= []
+    for w in words:
+        w = w.lower().strip()
+        orig = ''
+        if w.isalnum() and w not in stopwords:
+            new_list.append( w )
+    return new_list
